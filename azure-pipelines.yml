@@ -1,0 +1,46 @@
+# Agent Hub — Email Q&A Pipeline
+#
+# Runs on a 15-minute schedule. Polls Gmail for unread emails with [AGENT]
+# in the subject, routes each to the appropriate handler, and replies
+# via Claude.
+#
+# Required pipeline variables (mark as secret):
+#   ANTHROPIC_API_KEY    — Anthropic API key
+#   GMAIL_ADDRESS        — Gmail address to poll and reply from
+#   GMAIL_APP_PASSWORD   — Google app password (16 chars, not login password)
+
+trigger: none   # Only runs on schedule below
+
+schedules:
+  - cron: "*/15 * * * *"
+    displayName: Poll email every 15 minutes
+    branches:
+      include:
+        - main
+    always: true   # Run even if no new commits
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+  - checkout: self
+    displayName: Checkout agent-hub
+
+  - task: UsePythonVersion@0
+    displayName: Use Python 3.11
+    inputs:
+      versionSpec: '3.11'
+      addToPath: true
+
+  - script: pip install -r requirements.txt
+    displayName: Install dependencies
+    workingDirectory: $(Build.SourcesDirectory)
+
+  - script: python email_agent.py
+    displayName: Run email agent
+    workingDirectory: $(Build.SourcesDirectory)
+    env:
+      ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+      GMAIL_ADDRESS: $(GMAIL_ADDRESS)
+      GMAIL_APP_PASSWORD: $(GMAIL_APP_PASSWORD)

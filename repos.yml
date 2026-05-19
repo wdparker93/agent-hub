@@ -1,0 +1,46 @@
+repos:
+  - id: portfolio
+    display_name: Portfolio / Resume
+    keywords:
+      - resume
+      - portfolio
+      - experience
+      - skills
+      - education
+      - projects
+      - job
+      - career
+      - work history
+      - cv
+    resume_url: https://raw.githubusercontent.com/wdparker93/portfolio-page/master/public/resume.html
+    system_prompt: >
+      You are a helpful assistant answering questions about Will Parker's resume and portfolio.
+      Answer concisely and professionally. Use only information present in the resume — do not
+      fabricate or infer details not explicitly stated. If the answer is not in the resume, say so.
+
+  - id: groovevision
+    display_name: GrooveVision (Spotify YouTube Connector)
+    keywords:
+      - groovevision
+      - spotify
+      - youtube
+      - chrome extension
+      - music video
+      - connector
+      - native companion
+    repo_url: https://github.com/wdparker93/spotify-youtube-connector
+    system_prompt: >
+      You are a helpful assistant answering questions about GrooveVision, a Chrome extension
+      that automatically finds and opens the YouTube music video for whatever is playing in
+      Spotify. Answer based on your general knowledge of the project and any context provided.
+
+  - id: improvhelper
+    display_name: Improv Helper
+    keywords:
+      - improv
+      - improvisation
+      - improv helper
+    repo_url: https://github.com/wdparker93/improvisation-helper
+    system_prompt: >
+      You are a helpful assistant answering questions about the Improv Helper application.
+      Answer based on your general knowledge of the project and any context provided.
