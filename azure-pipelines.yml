@@ -1,6 +1,6 @@
 # Agent Hub — Email Q&A Pipeline
 #
-# Runs on a 15-minute schedule. Polls Gmail for unread emails with [AGENT]
+# Runs once per day. Polls Gmail for unread emails with [AGENT]
 # in the subject, routes each to the appropriate handler, and replies
 # via Claude.
 #
@@ -12,8 +12,8 @@
 trigger: none   # Only runs on schedule below
 
 schedules:
-  - cron: "*/15 * * * *"
-    displayName: Poll email every 15 minutes
+  - cron: "0 9 * * *"
+    displayName: Poll email once per day at 9am UTC
     branches:
       include:
         - main
