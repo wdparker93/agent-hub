@@ -4,10 +4,10 @@
 # in the subject, routes each to the appropriate handler, and replies
 # via Claude.
 #
-# Required pipeline variables (mark as secret):
-#   ANTHROPIC_API_KEY    — Anthropic API key
-#   GMAIL_ADDRESS        — Gmail address to poll and reply from
-#   GMAIL_APP_PASSWORD   — Google app password (16 chars, not login password)
+# Required variable group: agent-hub (link in Pipeline > Edit > Variables > Variable groups)
+#   CLAUDE_CODE_OAUTH_TOKEN — OAuth token from `claude setup-token` (Claude Pro/Max)
+#   GMAIL_ADDRESS           — Gmail address to poll and reply from
+#   GMAIL_APP_PASSWORD      — Google app password (16 chars, not login password)
 
 trigger: none   # Only runs on schedule below
 
@@ -18,6 +18,9 @@ schedules:
       include:
         - main
     always: true   # Run even if no new commits
+
+variables:
+  - group: agent-hub
 
 pool:
   vmImage: ubuntu-latest
@@ -41,6 +44,6 @@ steps:
     displayName: Run email agent
     workingDirectory: $(Build.SourcesDirectory)
     env:
-      ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+      CLAUDE_CODE_OAUTH_TOKEN: $(CLAUDE_CODE_OAUTH_TOKEN)
       GMAIL_ADDRESS: $(GMAIL_ADDRESS)
       GMAIL_APP_PASSWORD: $(GMAIL_APP_PASSWORD)
