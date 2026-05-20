@@ -6,9 +6,9 @@ routes each to the appropriate handler based on keyword matching,
 calls Claude for an answer, and replies to the sender.
 
 Required environment variables:
-  GMAIL_ADDRESS       — your Gmail address (e.g. you@gmail.com)
-  GMAIL_APP_PASSWORD  — 16-char Google app password (not your login password)
-  ANTHROPIC_API_KEY   — Anthropic API key
+  GMAIL_ADDRESS            — your Gmail address (e.g. you@gmail.com)
+  GMAIL_APP_PASSWORD       — 16-char Google app password (not your login password)
+  CLAUDE_CODE_OAUTH_TOKEN  — OAuth token from `claude setup-token` (Claude Pro/Max)
 
 Optional:
   REPOS_YML_PATH      — path to repos.yml (defaults to ./repos.yml)
@@ -78,7 +78,7 @@ def fetch_content(url: str) -> str:
 
 # ── Claude call ────────────────────────────────────────────────────────────────
 
-client = anthropic.Anthropic()
+client = anthropic.Anthropic(auth_token=os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
 
 def ask_claude(repo: dict, question: str) -> str:
     """
