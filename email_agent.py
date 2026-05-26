@@ -136,19 +136,26 @@ def ask_claude(repo: dict, question: str) -> str:
 def fetch_unread_agent_emails(mail: imaplib.IMAP4_SSL) -> list[dict]:
     """Return unread emails whose subject contains [AGENT]."""
     mail.select("INBOX")
-    _, data = mail.search(None, '(UNSEEN SUBJECT "[AGENT]")')
+    _, data = mail.search(None, "(UNSEEN)")
     ids = data[0].split()
     results = []
     for uid in ids:
         _, msg_data = mail.fetch(uid, "(RFC822)")
         raw = msg_data[0][1]
         msg = email.message_from_bytes(raw)
+        raw_subject = msg.get("Subject", "")
+        decoded_subject = " ".join(
+            part.decode(enc or "utf-8") if isinstance(part, bytes) else part
+            for part, enc in email.header.decode_header(raw_subject)
+        )
+        if "[AGENT]" not in decoded_subject:
+            continue
         body = extract_plain_body(msg)
         results.append(
             {
                 "uid": uid,
                 "from": msg.get("From", ""),
-                "subject": msg.get("Subject", ""),
+                "subject": decoded_subject,
                 "message_id": msg.get("Message-ID", ""),
                 "body": body,
                 "raw_msg": msg,
