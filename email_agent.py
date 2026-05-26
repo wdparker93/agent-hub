@@ -8,7 +8,7 @@ calls Claude for an answer, and replies to the sender.
 Required environment variables:
   GMAIL_ADDRESS            — your Gmail address (e.g. you@gmail.com)
   GMAIL_APP_PASSWORD       — 16-char Google app password (not your login password)
-  CLAUDE_CODE_OAUTH_TOKEN  — OAuth token from `claude setup-token` (Claude Pro/Max)
+  ANTHROPIC_API_KEY        — Anthropic API key
 
 Optional:
   REPOS_YML_PATH      — path to repos.yml (defaults to ./repos.yml)
@@ -18,6 +18,7 @@ import email
 import imaplib
 import os
 import smtplib
+from datetime import datetime, timedelta, timezone
 import textwrap
 import yaml
 import requests
@@ -136,7 +137,8 @@ def ask_claude(repo: dict, question: str) -> str:
 def fetch_unread_agent_emails(mail: imaplib.IMAP4_SSL) -> list[dict]:
     """Return unread emails whose subject contains [AGENT]."""
     mail.select("INBOX")
-    _, data = mail.search(None, "(UNSEEN)")
+    since = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%d-%b-%Y")
+    _, data = mail.search(None, f"(UNSEEN SINCE {since})")
     ids = data[0].split()
     results = []
     for uid in ids:
