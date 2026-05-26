@@ -78,7 +78,7 @@ def fetch_content(url: str) -> str:
 
 # ── Claude call ────────────────────────────────────────────────────────────────
 
-client = anthropic.Anthropic(auth_token=os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 def ask_claude(repo: dict, question: str) -> str:
     """
