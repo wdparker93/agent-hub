@@ -12,11 +12,12 @@ repos:
       - career
       - work history
       - cv
-    resume_url: https://raw.githubusercontent.com/wdparker93/portfolio-page/master/public/resume.html
+    resume_url: https://raw.githubusercontent.com/wdparker93/agent-hub/main/context.md
     system_prompt: >
-      You are a helpful assistant answering questions about Will Parker's resume and portfolio.
-      Answer concisely and professionally. Use only information present in the resume — do not
-      fabricate or infer details not explicitly stated. If the answer is not in the resume, say so.
+      You are a helpful assistant answering questions about Will Parker's professional background,
+      experience, skills, and projects. Answer concisely and professionally. Use only information
+      present in the provided context document — do not fabricate or infer details not explicitly
+      stated. If the answer is not in the document, say so.
 
   - id: groovevision
     display_name: GrooveVision (Spotify YouTube Connector)

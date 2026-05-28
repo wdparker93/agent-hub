@@ -8,7 +8,7 @@ calls Claude for an answer, and replies to the sender.
 Required environment variables:
   GMAIL_ADDRESS            — your Gmail address (e.g. you@gmail.com)
   GMAIL_APP_PASSWORD       — 16-char Google app password (not your login password)
-  CLAUDE_CODE_OAUTH_TOKEN  — OAuth token from `claude setup-token` (Claude Pro/Max)
+  ANTHROPIC_API_KEY        — Anthropic API key
 
 Optional:
   REPOS_YML_PATH      — path to repos.yml (defaults to ./repos.yml)
@@ -18,6 +18,7 @@ import email
 import imaplib
 import os
 import smtplib
+from datetime import datetime, timedelta, timezone
 import textwrap
 import yaml
 import requests
@@ -78,7 +79,7 @@ def fetch_content(url: str) -> str:
 
 # ── Claude call ────────────────────────────────────────────────────────────────
 
-client = anthropic.Anthropic(auth_token=os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
+client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 def ask_claude(repo: dict, question: str) -> str:
     """
@@ -136,19 +137,27 @@ def ask_claude(repo: dict, question: str) -> str:
 def fetch_unread_agent_emails(mail: imaplib.IMAP4_SSL) -> list[dict]:
     """Return unread emails whose subject contains [AGENT]."""
     mail.select("INBOX")
-    _, data = mail.search(None, '(UNSEEN SUBJECT "[AGENT]")')
+    since = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%d-%b-%Y")
+    _, data = mail.search(None, f"(UNSEEN SINCE {since})")
     ids = data[0].split()
     results = []
     for uid in ids:
         _, msg_data = mail.fetch(uid, "(RFC822)")
         raw = msg_data[0][1]
         msg = email.message_from_bytes(raw)
+        raw_subject = msg.get("Subject", "")
+        decoded_subject = " ".join(
+            part.decode(enc or "utf-8") if isinstance(part, bytes) else part
+            for part, enc in email.header.decode_header(raw_subject)
+        )
+        if "[AGENT]" not in decoded_subject:
+            continue
         body = extract_plain_body(msg)
         results.append(
             {
                 "uid": uid,
                 "from": msg.get("From", ""),
-                "subject": msg.get("Subject", ""),
+                "subject": decoded_subject,
                 "message_id": msg.get("Message-ID", ""),
                 "body": body,
                 "raw_msg": msg,
