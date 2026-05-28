@@ -38,7 +38,7 @@ SMTP_PORT = 465
 
 REPOS_YML_PATH = os.environ.get("REPOS_YML_PATH", os.path.join(os.path.dirname(__file__), "repos.yml"))
 
-MODEL = "claude-opus-4-7"
+MODEL = "claude-haiku-4-5-20251001"
 
 # ── Routing ────────────────────────────────────────────────────────────────────
 
@@ -121,7 +121,6 @@ def ask_claude(repo: dict, question: str) -> str:
     response = client.messages.create(
         model=MODEL,
         max_tokens=1024,
-        thinking={"type": "adaptive"},
         system=system_blocks,
         messages=[{"role": "user", "content": user_content}],
     )
