@@ -8,10 +8,16 @@ background, experience, skills, and projects. It is intentionally more detailed 
 ## Professional Summary
 
 Will Parker is a software engineer at Motion Industries in Atlanta, GA, focused on the Prophet 21
-ERP platform using C# and SQL. He works on cross-system integrations with PeopleSoft, Microsoft
-D365, and Google Cloud, and has recently emphasized AI tooling — building multi-agent systems and
-RAG knowledge base agents. Before transitioning into software, he spent four years as an R&D
-semiconductor process engineer at CreeLED Inc.
+ERP platform using C# and SQL. He joined as the first engineer dedicated to Prophet 21 development
+and built the team's software ecosystem from scratch — taking the codebase from unversioned files
+scattered across individual laptops to a fully version-controlled, unit-tested, documented,
+CI/CD-automated repository with in-repo AI agents that automate feasibility analyses, accelerate
+development, and streamline new engineer onboarding. Beyond traditional software development, he
+designs and implements operational improvements — including release train processes, automated
+deployment pipelines, and agent-driven workflows — and has mentored new engineers joining the
+growing team. He also works on cross-system integrations with PeopleSoft, Microsoft D365, and Google Cloud, and has built EDI
+(Electronic Data Interchange) integrations with trading partners. Before transitioning into software, he spent four years as an R&D semiconductor
+process engineer at CreeLED Inc.
 
 <!-- Expand with anything else that captures your overall trajectory or what kind of work you do best -->
 
@@ -31,7 +37,7 @@ semiconductor process engineer at CreeLED Inc.
 
 #### Multi-agent AI systems for engineer onboarding and workflow automation
 - Authored Confluence knowledge base articles and trained agents on codebase, Confluence articles, Prophet 21 documentation, Prophet 21 API definitions, and Prophet 21 database schema to guide new engineers through examples and explain how to author new software in accordance with team's architectural patterns.
-- One agent represented an application developer and was trained on the codebase, Confluence articles, Prophet 21 documentation, Prophet 21 API definitions, and Prophet 21 database schema. The agent was coached to develop under our home-grown framework we developed to overcome inherent Prophet 21 system limitations and allow us to further and more reliably extend its functionality via C# extensions (what Prophet 21 terms business rules)
+- One agent represented an application developer and was trained on the codebase, Confluence articles, Prophet 21 documentation, Prophet 21 API definitions, and Prophet 21 database schema. The agent was coached to develop under our home-grown framework, built to overcome inherent Prophet 21 system limitations and extend its functionality more reliably via C# extensions (what Prophet 21 terms business rules)
 - Another agent represented limitations of the application and was trained on Prophet 21 documentation, Prophet 21 API definitions, Prophet 21 database schema, and a known list of limitations that constrain what the developer agent can execute. Some limitations are clearly described by the application's documentation, but many were discovered by our team and are undocumented, requiring seat time to triage, troubleshoot, and affirm each newly discovered limitation. This agent is also primed with implementation requirements — for example, as Prophet 21 is third-party software, directly modifying its database via DML is only permitted as a last resort after the preferred approaches through Prophet 21's extensibility engine and APIs have been ruled out.
 - Another agent was trained on the entirety of the repo, all documentation, API definitions, database schema, and Prophet 21 help pages and serves as a knowledge base agent. Its knowledge is sufficient to route queries to the appropriate specialist agent.
 - Each agent has its own set of skills.
@@ -67,7 +73,30 @@ semiconductor process engineer at CreeLED Inc.
 - In total, the EDI application ingested $810,000 of inbound sales orders from customers in the first year. It also processes $1M of rebates per month.
 - The current set of EDI transactions include inbound 850 (sales order from a customer), inbound 810 (vendor invoice), inbound 855 (purchase order acknowledgements from vendors), inbound 856 (advance ship notifications from vendors), inbound 849 (vendor responses to rebate requests), outbound 850 (outbound purchase orders to vendors), outbound 810 (invoices to customers), outbound 856 (outbound advance ship notifications to customers), outbound 844 (request for rebates to vendors)
 
+#### D365 Scheduling Integration via Google Cloud, Prophet 21 APIs and Prophet 21 Flat File Imports
+- Prophet 21 has its own built-in system for logging labor hours against production and service orders. Production orders are essentially the creation or assembling of items to be used by the company in P21 at a later stage in the process. Service orders are customer-facing orders that incur transactional activity against the Accounts Receivable (AR) general ledger.
+- Despite Prophet 21 having its own system, Motion mandated the usage of Dynamics 365's scheduling module as a standard for tracking hours worked, so I built an integration between P21 and D365.
+- The integration was comprised of SQL views created to abstract the system logic required to get production and service orders translated into a system-agnostic model (termed the Motion Model) which was hosted in Google Cloud.
+- Motion's internal cloud services built pipelines that queried the views I built (that updated with new transaction data as new orders were created in P21). These pipelines loaded data into the Motion model.
+- The pipeline triggered the execution of workflows in Google Cloud powered by .liquid files (a language created by Shopify).
+- I edited these flows to account for new fields and to ensure data from Prophet 21 made it to the Motion model.
+- From the Motion model, additional workflows picked up files and carried them to D365 where users interacted with the orders created and logged time against them.
+- As users logged time against them, files were created summarizing the time worked and deposited into Google Cloud buckets.
+- I authored an ADO pipeline that ran on a timer and copied files from the GCP bucket on the P21 server.
+- Once files arrived on the P21 server, a backend C# application that I also created parsed them and translated their contents into either API calls or tab-delimited flat files depending on whether the order in P21 was a service order or a production order. The choice of API vs. flat file was dictated by limitations inherent in P21.
+- This project required cross-department collaboration as well as an understanding of how various ecosystems in the Motion network connected.
+
 #### PeopleSoft integrations via Prophet 21 APIs
+- Prophet 21 has its own built-in general ledger, meaning transactions that originate from the system post to Accounts Receivable (AR) and Accounts Payable (AP) accounts. The Prophet 21 ERP is a full-fledged ERP with financials built-in.
+- Motion Industries' parent company, Genuine Parts Company (GPC), mandated that all financial activity be lifted and shifted into its centralized accounting system named PeopleSoft. All AR/AP activities were to happen in there.
+- To facilitate this, data files for AR and AP transactions are sent by GPC to Motion's on-premises server where Prophet 21 is hosted.
+- I built a C# application that runs nightly that translates the records in the files into transactions in P21 using the P21 APIs as if they had happened in P21.
+- This project was difficult as requirements were vague and transaction data that did not originate from Prophet 21 that also had no clear relational meaning to data in P21 had to be manipulated and stored in ways to make it meaningful over time with limited information. Up to the time of go-live, we were given a set of codes that we were told to expect to receive in the files that had loosely been translated into actions to take in Prophet 21.
+- No complete test data set was provided before go-live, requiring the application to be defensively developed — intelligently logging and classifying errors without taking action in the ERP unless certain.
+- I voiced concerns notifying management that we would be unraveling the details of this application for months in good faith to set expectations, but the implementation continued.
+- The error logging process was automated and tabulated so analyses on errors could be performed and manually corrected over time as more information was learned. As errors from PeopleSoft could range from human error to unknown and unplanned-for data, maintaining a list of errors in tabulated and actionable format was crucial. For example, in some instances, invoices that originated from P21 were credited then debited (washed), paid, then washed again, all in the same file on the same day. Records that would pay invoices under normal circumstances could take a different path depending on the contents of the file, the order in which the records appeared in the file, and the state of the database as each record was processed.
+- Each night's run resulted in the cumulative AR/AP transaction volumes of > $100,000. Defensive programming was key, as errors could not go undetected or propagate in unmonitored ways given the financial stakes.
+- The application reached steady state over the course of months of microtuning to match activity as accountants became more involved with the project.
 
 #### Reusable .NET Framework libraries
 - Prophet 21 allows developers to extend its functionality via C# business rules that hook into events the application exposes. A key undocumented limitation is that only one rule can be registered per hook before behavior becomes unpredictable.
@@ -78,8 +107,14 @@ semiconductor process engineer at CreeLED Inc.
 - Prophet 21's built-in permissions system applies at the rule level, not the service level — a problem once rules became multi-service stubs. To enable per-service access control, I created user-defined tables mirroring the system's built-in permission structure, with entries mapping services to the users and roles permitted to execute them. This custom permissions engine lets individual services be toggled on or off per user without any code changes.
 
 #### Backend and full-stack ERP enhancements (80%+ test coverage)
+- Motion mandates that all code be unit tested with >= 80% code coverage and that SonarQube (the validator of unit tests and code quality) analyses be passing prior to merge into the main branch.
+- I authored an ADO pipeline that runs on PR creation into main. The pipeline builds the project, executes unit tests, generates a code coverage report via a Docker image containing the required SonarQube analysis tools, and uploads the report to the SonarQube server, which responds with a pass/fail verdict.
+- Over time, I developed in-repo Codex agents that automated the authoring of unit tests that aligned with our development practices.
 
 #### Event-based C# enhancements publishing to Google Cloud Pub/Sub
+- Motion Industries has its own internal cloud services team that develops workflows in Google Cloud to allow systems to connect via a common, system-agnostic model termed the Motion Model.
+- To integrate P21, events exposed natively by the application were used to signal updates had occurred in the system.
+- I wrote a backend application that captured these events and pushed to the Motion Model via an Apigee API gateway.
 
 #### Technical contact for cross-team integration projects
 
