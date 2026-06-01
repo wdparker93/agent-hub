@@ -1,7 +1,8 @@
 # Agent Hub — Weekly App Idea Generator Pipeline
 #
-# Runs every Sunday at 7am UTC. Asks Claude to surface monetizable app ideas
-# for a solo developer and emails the report to GMAIL_ADDRESS.
+# Runs every Sunday at 7am UTC. Asks Claude to surface monetizable app ideas,
+# emails the report to GMAIL_ADDRESS, and commits a dated markdown file to
+# ideas/YYYY-MM-DD.md so agents can read and act on previous ideas.
 #
 # Required variable group: agent-hub (same as email agent)
 #   ANTHROPIC_API_KEY  — Anthropic API key
@@ -28,6 +29,7 @@ steps:
 
   - checkout: self
     displayName: Checkout agent-hub
+    persistCredentials: true   # needed to push the ideas file back
 
   - task: UsePythonVersion@0
     displayName: Use Python 3.11
@@ -46,3 +48,12 @@ steps:
       ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
       GMAIL_ADDRESS: $(GMAIL_ADDRESS)
       GMAIL_APP_PASSWORD: $(GMAIL_APP_PASSWORD)
+
+  - script: |
+      git config user.email "pipeline@agent-hub"
+      git config user.name "Agent Hub Pipeline"
+      git add ideas/
+      git diff --cached --quiet || git commit -m "ideas: weekly run $(date -u +%Y-%m-%d)"
+      git push origin HEAD:main
+    displayName: Commit ideas markdown to repo
+    workingDirectory: $(Build.SourcesDirectory)

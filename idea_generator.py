@@ -148,12 +148,39 @@ def send_email(ideas: str) -> None:
     print(f"Sent idea report to {GMAIL_ADDRESS}")
 
 
+# ── Persist to markdown ────────────────────────────────────────────────────────
+
+def save_markdown(ideas: str) -> str:
+    """Write ideas to ideas/YYYY-MM-DD.md and return the file path."""
+    ideas_dir = os.path.join(os.path.dirname(__file__), "ideas")
+    os.makedirs(ideas_dir, exist_ok=True)
+
+    filename = f"{date.today().isoformat()}.md"
+    filepath = os.path.join(ideas_dir, filename)
+
+    frontmatter = f"""---
+date: {date.today().isoformat()}
+model: {MODEL}
+pipeline: idea-generator
+---
+
+# Weekly App Ideas — {date.today().strftime("%B %d, %Y")}
+
+"""
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(frontmatter + ideas + "\n")
+
+    print(f"Saved ideas to {filepath}")
+    return filepath
+
+
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def run() -> None:
     print("Generating app ideas via Claude…")
     ideas = generate_ideas()
     print(ideas)
+    save_markdown(ideas)
     send_email(ideas)
 
 
