@@ -136,7 +136,7 @@ def ask_claude(repo: dict, question: str) -> str:
 def fetch_unread_agent_emails(mail: imaplib.IMAP4_SSL) -> list[dict]:
     """Return unread emails whose subject contains [AGENT]."""
     mail.select("INBOX")
-    since = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%d-%b-%Y")
+    since = (datetime.now(timezone.utc) - timedelta(hours=8)).strftime("%d-%b-%Y")
     _, data = mail.search(None, f"(UNSEEN SINCE {since})")
     ids = data[0].split()
     results = []
