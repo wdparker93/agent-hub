@@ -1,0 +1,48 @@
+# Agent Hub — Weekly App Idea Generator Pipeline
+#
+# Runs every Sunday at 7am UTC. Asks Claude to surface monetizable app ideas
+# for a solo developer and emails the report to GMAIL_ADDRESS.
+#
+# Required variable group: agent-hub (same as email agent)
+#   ANTHROPIC_API_KEY  — Anthropic API key
+#   GMAIL_ADDRESS      — Gmail address to send the report to
+#   GMAIL_APP_PASSWORD — Google app password (16 chars)
+
+trigger: none
+
+schedules:
+  - cron: "0 7 * * 0"
+    displayName: Generate app ideas every Sunday at 7am UTC
+    branches:
+      include:
+        - main
+    always: true
+
+variables:
+  - group: agent-hub
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+  - checkout: self
+    displayName: Checkout agent-hub
+
+  - task: UsePythonVersion@0
+    displayName: Use Python 3.11
+    inputs:
+      versionSpec: '3.11'
+      addToPath: true
+
+  - script: pip install -r requirements.txt
+    displayName: Install dependencies
+    workingDirectory: $(Build.SourcesDirectory)
+
+  - script: python idea_generator.py
+    displayName: Run idea generator
+    workingDirectory: $(Build.SourcesDirectory)
+    env:
+      ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+      GMAIL_ADDRESS: $(GMAIL_ADDRESS)
+      GMAIL_APP_PASSWORD: $(GMAIL_APP_PASSWORD)
