@@ -1,8 +1,8 @@
-# Agent Hub — Email Q&A Pipeline
+# Agent Hub — Weekly Brainstorm Pipeline
 #
-# Runs three times per day (9am, 2pm, 8pm UTC). Polls Gmail for unread emails
-# with [AGENT] in the subject, routes each to the appropriate handler, and
-# replies via Claude.
+# Runs every Monday at 9am UTC. Calls Claude to generate 5-7 monetizable
+# app/product ideas spanning broad market categories (not interest-limited)
+# and emails a digest to the developer.
 #
 # Required variable group: agent-hub (link in Pipeline > Edit > Variables > Variable groups)
 #   ANTHROPIC_API_KEY  — Anthropic API key
@@ -12,8 +12,8 @@
 trigger: none   # Only runs on schedule below
 
 schedules:
-  - cron: "0 9,14,20 * * *"
-    displayName: Poll email three times per day (9am, 2pm, 8pm UTC)
+  - cron: "0 9 * * 1"
+    displayName: Generate app ideas every Monday at 9am UTC
     branches:
       include:
         - main
@@ -40,8 +40,8 @@ steps:
     displayName: Install dependencies
     workingDirectory: $(Build.SourcesDirectory)
 
-  - script: python email_agent.py
-    displayName: Run email agent
+  - script: python brainstorm_agent.py
+    displayName: Run brainstorm agent
     workingDirectory: $(Build.SourcesDirectory)
     env:
       ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)

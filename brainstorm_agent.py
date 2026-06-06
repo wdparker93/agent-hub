@@ -1,0 +1,147 @@
+"""
+Agent Hub — Weekly App Idea Brainstorm Agent
+
+Generates monetizable app/product ideas for a solo developer. Ideas span broad
+market categories — not constrained by the developer's personal interests.
+Emails a digest and appends ideas to knowledge/idea-log.md.
+
+Required environment variables:
+  GMAIL_ADDRESS        — Gmail address to send the digest from
+  GMAIL_APP_PASSWORD   — 16-char Google app password
+  ANTHROPIC_API_KEY    — Anthropic API key
+
+Optional:
+  DIGEST_RECIPIENT     — email to send digest to (defaults to GMAIL_ADDRESS)
+"""
+
+import os
+import smtplib
+import textwrap
+from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+
+import anthropic
+
+GMAIL_ADDRESS = os.environ["GMAIL_ADDRESS"]
+GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 465
+DIGEST_RECIPIENT = os.environ.get("DIGEST_RECIPIENT", GMAIL_ADDRESS)
+IDEAS_LOG_PATH = Path(__file__).parent / "knowledge" / "idea-log.md"
+
+MODEL = "claude-opus-4-7"
+
+SYSTEM_PROMPT = """\
+You are a product strategist with deep knowledge of software markets, SaaS pricing, \
+and solo-developer economics. Your job is to surface the highest-potential monetizable \
+app ideas — ranked by revenue potential and market need, NOT by the developer's personal \
+hobbies or tastes. Cast a wide net across industries and buyer types.\
+"""
+
+DEVELOPER_CONTEXT = """\
+Developer skill set: Chrome extensions, desktop Windows apps (C# / .NET), Python \
+automation and scripting, small React / JavaScript web apps, REST API integrations, \
+backend data pipelines, EDI and ERP integrations.
+
+Monetization infrastructure available: Lemon Squeezy or Stripe for one-time purchases \
+and subscriptions. Distribution channels: direct, Chrome Web Store, Product Hunt, Gumroad.\
+"""
+
+IDEA_PROMPT = f"""\
+{DEVELOPER_CONTEXT}
+
+Generate 5-7 app or product ideas this developer could build and sell. The ideas MUST:
+
+1. **Span different market segments** — do NOT cluster around the developer's personal \
+interests. Look broadly: small business operations, legal or medical admin automation, \
+professional productivity, niche B2B verticals, Chrome extensions for work tasks, \
+Windows desktop utilities, developer tools, real estate, finance, HR, logistics, etc.
+
+2. **Have a clear paying customer** — someone who pays because the tool saves time, \
+money, or headaches. The more painful the problem for a professional or business owner, \
+the better.
+
+3. **Be solo-buildable** — achievable in 1–8 weeks of part-time work given the skill \
+set above.
+
+4. **Have a defensible monetization angle** — one-time purchase for tools with fixed \
+value, subscription for anything with recurring value (live data, automations that run \
+continuously, etc.).
+
+Prioritize ideas with strong revenue potential and thin competition over ideas that \
+are merely interesting to the developer personally.
+
+For each idea use exactly this format:
+
+**[Idea Name]**
+- Problem: (1–2 sentences from the buyer's perspective — make the pain concrete)
+- Target buyer: (specific role or person, e.g. "solo immigration attorney", "Amazon FBA seller")
+- Why they pay: (time saved, risk reduced, money recovered — quantify if possible)
+- Price point: ($X one-time or $X/month — and why that number is defensible)
+- Build effort: (N weeks estimate; key technical components)
+- Closest competitors: (name them, then state the gap)
+- Monetization model: (one-time / subscription / freemium + paid tier)
+- Market breadth: (niche / mid-market / broad — and why that is acceptable)
+"""
+
+
+def generate_ideas(client: anthropic.Anthropic) -> str:
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+        messages=[{"role": "user", "content": IDEA_PROMPT}],
+    )
+    return "\n\n".join(block.text for block in response.content if block.type == "text")
+
+
+def append_to_log(ideas: str) -> None:
+    IDEAS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    entry = f"\n\n---\n\n## {date_str}\n\n{ideas}\n"
+    with open(IDEAS_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(entry)
+    print(f"Appended ideas to {IDEAS_LOG_PATH}")
+
+
+def send_digest(ideas: str) -> None:
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    subject = f"[Agent Hub] Weekly App Ideas — {date_str}"
+
+    msg = MIMEMultipart("alternative")
+    msg["From"] = GMAIL_ADDRESS
+    msg["To"] = DIGEST_RECIPIENT
+    msg["Subject"] = subject
+
+    plain = textwrap.fill(ideas, width=80)
+    html = (
+        "<html><body>"
+        "<pre style='font-family:monospace;font-size:14px;white-space:pre-wrap'>"
+        f"{ideas}"
+        "</pre>"
+        "<hr><p><em>Generated by Agent Hub — Brainstorm Agent</em></p>"
+        "</body></html>"
+    )
+
+    msg.attach(MIMEText(plain, "plain"))
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as smtp:
+        smtp.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+        smtp.sendmail(GMAIL_ADDRESS, DIGEST_RECIPIENT, msg.as_string())
+    print(f"Digest sent to {DIGEST_RECIPIENT}")
+
+
+def run() -> None:
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    print("Generating app ideas...")
+    ideas = generate_ideas(client)
+    print(ideas)
+    send_digest(ideas)
+    append_to_log(ideas)
+
+
+if __name__ == "__main__":
+    run()

@@ -1,14 +1,28 @@
 # Agent Hub
 
-A lightweight email-driven agent that polls Gmail for questions and answers them using Claude.
+A lightweight email-driven agent that polls Gmail for questions and answers them using Claude. Also runs a weekly brainstorm agent that generates monetizable app ideas.
 
-## How it works
+## Pipelines
 
-1. The ADO pipeline fires every 15 minutes (`always: true` so it runs even with no new commits).
+| Pipeline file | Schedule | Purpose |
+|---|---|---|
+| `automatic-email-agent.yml` | Three times per day — 9am, 2pm, 8pm UTC | Poll Gmail and reply to `[AGENT]` emails |
+| `brainstorm-agent.yml` | Every Monday at 9am UTC | Generate app/product ideas and email a digest |
+
+## How the email agent works
+
+1. The ADO pipeline fires three times per day (`always: true` so it runs even with no new commits).
 2. `email_agent.py` connects to Gmail via IMAP and searches for **unread emails where the subject contains `[AGENT]`**.
 3. Each matching email is routed to the best-matching repo handler by keyword matching against `repos.yml`.
-4. Claude (`claude-opus-4-7`, adaptive thinking) answers the question using the relevant document (e.g. `resume.html` fetched from GitHub).
+4. Claude answers the question using the relevant document (e.g. `context.md` fetched from GitHub).
 5. The answer is sent as a reply and the email is marked read so it isn't processed again.
+
+## How the brainstorm agent works
+
+1. `brainstorm_agent.py` calls Claude with a product-strategist prompt focused on monetizable, solo-buildable app ideas.
+2. Ideas span broad market categories — not limited to personal interests — prioritized by revenue potential.
+3. A digest (5–7 ideas with problem, target buyer, price point, and build effort) is emailed to `wdparker93@gmail.com`.
+4. Ideas are appended to `knowledge/idea-log.md` with a date stamp for later review.
 
 ## Setup
 
@@ -26,9 +40,11 @@ In Azure DevOps → Pipelines → (this pipeline) → Edit → Variables, add an
 | `GMAIL_ADDRESS` | `wdparker93@gmail.com` |
 | `GMAIL_APP_PASSWORD` | The 16-char app password |
 
-### 3. Create the ADO pipeline
+### 3. Create the ADO pipelines
 
-Point the pipeline at this repo and select `azure-pipelines.yml` as the configuration file.
+In Azure DevOps, create two pipelines pointing at this repo:
+- **Email agent**: select `automatic-email-agent.yml` as the configuration file.
+- **Brainstorm agent**: select `brainstorm-agent.yml` as the configuration file. Link the same `agent-hub` variable group.
 
 ## Sending a question
 
@@ -36,7 +52,7 @@ Email `wdparker93@gmail.com` with:
 - Subject: `[AGENT] <your question here>`
 - Body: the question (plain text)
 
-The reply arrives within 15 minutes (next pipeline run).
+The reply arrives within the next pipeline run (pipeline runs at 9am, 2pm, and 8pm UTC — maximum wait ~13 hours overnight).
 
 ## Routing
 
