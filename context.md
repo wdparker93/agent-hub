@@ -7,8 +7,9 @@ background, experience, skills, and projects. It is intentionally more detailed 
 
 ## Professional Summary
 
-Will Parker is a software engineer at Motion Industries in Atlanta, GA, focused on the Prophet 21
-ERP platform using C# and SQL. He joined as the first engineer dedicated to Prophet 21 development
+Will Parker is a software engineer at Motion Industries, focused on the Prophet 21
+ERP platform using C# and SQL. He lives in Atlanta, GA; Motion Industries is headquartered
+in Birmingham, AL. He joined as the first engineer dedicated to Prophet 21 development
 and built the team's software ecosystem from scratch — taking the codebase from unversioned files
 scattered across individual laptops to a fully version-controlled, unit-tested, documented,
 CI/CD-automated repository with in-repo AI agents that automate feasibility analyses, accelerate
@@ -27,7 +28,7 @@ process engineer at CreeLED Inc.
 
 ### Software Engineer II — Motion Industries (Prophet 21 Team)
 **Dates:** December 2024 – Present
-**Location:** Birmingham, AL (Atlanta, GA)
+**Location:** Atlanta, GA (Motion Industries HQ: Birmingham, AL)
 
 <!-- Describe day-to-day ownership, team structure, biggest wins since promotion, current projects -->
 
